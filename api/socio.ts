@@ -14,7 +14,8 @@ export default async function handler(
   res: VercelResponse
 ) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
+    res.setHeader('Allow', ['POST'])
+    return res.status(405).end(`Method ${req.method} Not Allowed`)
   }
 
   try {
@@ -22,16 +23,46 @@ export default async function handler(
       'OPENAI_API_KEY existe?',
       process.env.OPENAI_API_KEY ? 'SIM' : 'NÃO'
     )
+
     const body =
       typeof req.body === 'string' ? JSON.parse(req.body) : req.body
 
     const { message } = body
 
-    if (!message) {
-      return res.status(400).json({ error: 'Message is required' })
+    if (!message || typeof message !== 'string') {
+      return res
+        .status(400)
+        .json({ error: 'O campo "message" é obrigatório.' })
     }
 
-    const response = await openai.responses.create({
-      mode
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: `
+Você é um sócio especialista em estética automotiva e lava rápidos.
+Ajude donos de estúdios a aumentar faturamento, ticket médio,
+organizar financeiro e melhorar vendas.
+Responda sempre de forma prática, direta e estratégica.
+          `,
+        },
+        { role: 'user', content: message },
+      ],
+    })
 
+    const reply = completion.choices[0]?.message?.content
+
+    if (!reply) {
+      return res
+        .status(500)
+        .json({ error: 'A OpenAI não retornou resposta.' })
+    }
+
+    return res.status(200).json({ reply })
+  } catch (error) {
+    console.error('Erro OpenAI:', error)
+    return res.status(500).json({ error: 'Erro interno do servidor' })
+  }
+}
 
