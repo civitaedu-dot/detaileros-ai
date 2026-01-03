@@ -1,7 +1,7 @@
-console.log('OPENAI KEY exists?', !!process.env.OPENAI_API_KEY)
 export const config = {
   runtime: 'nodejs',
 }
+
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import OpenAI from 'openai'
 
@@ -18,44 +18,20 @@ export default async function handler(
   }
 
   try {
-    const { message } = req.body
+    console.log(
+      'OPENAI_API_KEY existe?',
+      process.env.OPENAI_API_KEY ? 'SIM' : 'NÃO'
+    )
+    const body =
+      typeof req.body === 'string' ? JSON.parse(req.body) : req.body
+
+    const { message } = body
 
     if (!message) {
       return res.status(400).json({ error: 'Message is required' })
     }
 
     const response = await openai.responses.create({
-      model: 'gpt-4.1-mini',
-      input: [
-        {
-          role: 'system',
-          content: `
-Você é um sócio especialista em estética automotiva e lava rápidos.
-Ajude donos de estúdios a:
-- Aumentar faturamento
-- Melhorar ticket médio
-- Criar ofertas inteligentes
-- Organizar financeiro
-- Melhorar vendas e processos
+      mode
 
-Responda sempre de forma prática, direta e estratégica.
-          `,
-        },
-        {
-          role: 'user',
-          content: message,
-        },
-      ],
-    })
-
-    const reply =
-      response.output_text ||
-      'Não consegui gerar uma resposta agora.'
-
-    return res.status(200).json({ reply })
-  } catch (error) {
-    console.error('Erro OpenAI:', error)
-    return res.status(500).json({ error: 'Erro ao processar a requisição' })
-  }
-}
 
