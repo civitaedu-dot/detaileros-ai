@@ -13,29 +13,29 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { message } = req.body
-
-  if (!message) {
-    return res.status(400).json({ error: 'Message is required' })
-  }
-
   try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
+    const { message } = req.body
+
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' })
+    }
+
+    const response = await openai.responses.create({
+      model: 'gpt-4.1-mini',
+      input: [
         {
           role: 'system',
           content: `
 Você é um sócio especialista em estética automotiva e lava rápidos.
-Seu papel é ajudar donos de estúdios a:
+Ajude donos de estúdios a:
 - Aumentar faturamento
 - Melhorar ticket médio
 - Criar ofertas inteligentes
-- Organizar controle financeiro
-- Melhorar vendas, estoque e compras
+- Organizar financeiro
+- Melhorar vendas e processos
 
-Responda sempre de forma prática, estratégica e direta.
-`,
+Responda sempre de forma prática, direta e estratégica.
+          `,
         },
         {
           role: 'user',
@@ -44,11 +44,14 @@ Responda sempre de forma prática, estratégica e direta.
       ],
     })
 
-    const reply = completion.choices[0].message.content
+    const reply =
+      response.output_text ||
+      'Não consegui gerar uma resposta agora.'
 
     return res.status(200).json({ reply })
   } catch (error) {
-    console.error(error)
-    return res.status(500).json({ error: 'Erro ao conectar com a OpenAI' })
+    console.error('Erro OpenAI:', error)
+    return res.status(500).json({ error: 'Erro ao processar a requisição' })
   }
 }
+
