@@ -1,3 +1,4 @@
+console.log('OPENAI KEY exists?', !!process.env.OPENAI_API_KEY)
 export const config = {
   runtime: 'nodejs',
 }
