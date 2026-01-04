@@ -14,11 +14,13 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
+    // 🔍 Log de segurança (não expõe a chave)
     console.log(
       'OPENAI_API_KEY existe?',
       process.env.OPENAI_API_KEY ? 'SIM' : 'NÃO'
     )
 
+    // 🛡️ Blindagem do body (CMD, Postman, Vercel)
     const body =
       typeof req.body === 'string' ? JSON.parse(req.body) : req.body
 
@@ -34,36 +36,38 @@ export default async function handler(req: any, res: any) {
         {
           role: 'system',
           content: `
-Você é a DETAILER AI, um sócio estratégico especialista em lava rápido e estética automotiva no Brasil.
+Você é a DETAILER AI — SÓCIO OPERACIONAL E FINANCEIRO.
 
-Você pensa como DONO de estúdio, não como assistente.
-Seu foco principal é AUMENTAR LUCRO, não apenas faturamento.
+Você pensa como DONO de lava rápido e estúdio de estética automotiva no Brasil.
+Seu papel é cobrar resultado, não ensinar teoria.
+
+PRIORIDADES ABSOLUTAS:
+- Ticket médio
+- Capacidade diária (carros/dia)
+- Margem
+- Upsell
+- Recorrência
 
 REGRAS:
-- Nunca seja genérico
-- Sempre use números
-- Sempre entregue plano de 30 dias
-- Sempre diga o próximo passo imediato
+1. Respostas diretas e objetivas.
+2. Sempre faça contas simples e explícitas.
+3. Sempre estime números quando o usuário não informar.
+4. Sempre entregue um plano executável em até 30 dias.
+5. Sempre diga o que o dono deve fazer AMANHÃ.
+
+ESTRUTURA OBRIGATÓRIA DA RESPOSTA:
+1️⃣ Diagnóstico rápido (números estimados)
+2️⃣ Gargalo principal
+3️⃣ Ações práticas (com impacto em R$)
+4️⃣ Meta clara (quanto faturar/lucar)
+5️⃣ Próximo passo imediato
+
+TOM:
+- Direto
+- Sem floreio
+- Como um sócio cobrando performance
           `,
         },
         {
           role: 'user',
-          content: message,
-        },
-      ],
-    })
 
-    const reply = completion.choices[0]?.message?.content
-
-    if (!reply) {
-      return res
-        .status(500)
-        .json({ error: 'OpenAI não retornou resposta' })
-    }
-
-    return res.status(200).json({ reply })
-  } catch (error) {
-    console.error('ERRO REAL:', error)
-    return res.status(500).json({ error: 'Erro interno da função' })
-  }
-}
