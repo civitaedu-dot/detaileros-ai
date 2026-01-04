@@ -1,27 +1,42 @@
-import OpenAI from "openai";
+export const config = {
+  runtime: 'nodejs',
+}
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+import type { VercelRequest, VercelResponse } from '@vercel/node'
+import OpenAI from 'openai'
 
-export default async function handler(req, res) {
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+})
+
+export default async function handler(
+  req: VercelRequest,
+  res: VercelResponse
+) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   try {
-    if (req.method !== "POST") {
-      return res.status(405).json({ error: "Method not allowed" });
-    }
+    console.log(
+      'OPENAI_API_KEY existe?',
+      process.env.OPENAI_API_KEY ? 'SIM' : 'NÃO'
+    )
+    const body =
+      typeof req.body === 'string' ? JSON.parse(req.body) : req.body
 
-    const { message } = req.body;
+    const { message } = body || {}
 
     if (!message) {
-      return res.status(400).json({ error: "Message is required" });
+      return res.status(400).json({ error: 'Message is required' })
     }
-
-    const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
       messages: [
         {
-          role: "system",
-          content: Você é a DETAILER AI, um sócio estratégico especialista em lava rápido e estética automotiva no Brasil.
+          role: 'system',
+          content: `
+Você é a DETAILER AI, um sócio estratégico especialista em lava rápido e estética automotiva no Brasil.
 
 Você pensa como DONO de estúdio, não como assistente.
 Seu foco principal é AUMENTAR LUCRO, não apenas faturamento.
@@ -40,11 +55,11 @@ REGRAS OBRIGATÓRIAS:
 5. Sempre estruture a resposta em 5 blocos:
 
 OBRIGATÓRIO NA RESPOSTA:
-1️⃣ Diagnóstico rápido da situação atual (com estimativas)
-2️⃣ Objetivo claro (quanto faturar / lucrar)
-3️⃣ Plano de ação prático (diário / semanal)
-4️⃣ Impacto financeiro esperado de cada ação
-5️⃣ Próximo passo imediato (o que fazer amanhã)
+ Diagnóstico rápido da situação atual (com estimativas)
+ Objetivo claro (quanto faturar / lucrar)
+ Plano de ação prático (diário / semanal)
+ Impacto financeiro esperado de cada ação
+ Próximo passo imediato (o que fazer amanhã)
 
 TOM:
 - Direto
@@ -53,45 +68,26 @@ TOM:
 - Como um consultor pago falando com o dono do negócio
 
 Se faltar informação, assuma valores realistas e deixe isso explícito.
-
-Você é a DETAILER AI, um consultor especialista em lava rápido, estética automotiva e detalhamento no Brasil.
-
-Você pensa como dono de estúdio.
-Você entende:
-- ticket médio
-- capacidade operacional
-- margem
-- upsell
-- recorrência
-- fluxo de caixa
-- marketing local
-
-REGRAS OBRIGATÓRIAS:
-1. Nunca dê respostas genéricas.
-2. Sempre use números e contas simples.
-3. Sempre entregue um plano prático para 30 dias.
-4. Estruture a resposta em:
-   - Diagnóstico
-   - Objetivo
-   - Plano de ação
-   - Impacto financeiro
-   - Prazo
-5. Linguagem direta, clara e objetiva.
-`
+          `,
         },
         {
-          role: "user",
-          content: message
-        }
-      ]
-    });
+          role: 'user',
+          content: message,
+        },
+      ],
+    })
 
-    res.status(200).json({
-      reply: completion.choices[0].message.content
-    });
+    const reply = completion.choices[0]?.message?.content
 
+    if (!reply) {
+      return res
+        .status(500)
+        .json({ error: 'A OpenAI não retornou resposta' })
+    }
+
+    return res.status(200).json({ reply })
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro interno" });
+    console.error('ERRO REAL:', error)
+    return res.status(500).json({ error: 'Erro interno da função' })
   }
 }
