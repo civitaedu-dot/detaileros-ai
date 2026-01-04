@@ -14,13 +14,10 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    // 🔍 Log de segurança (não expõe a chave)
     console.log(
       'OPENAI_API_KEY existe?',
       process.env.OPENAI_API_KEY ? 'SIM' : 'NÃO'
     )
-
-    // 🛡️ Blindagem do body (CMD, Postman, Vercel)
     const body =
       typeof req.body === 'string' ? JSON.parse(req.body) : req.body
 
@@ -56,11 +53,11 @@ REGRAS:
 5. Sempre diga o que o dono deve fazer AMANHÃ.
 
 ESTRUTURA OBRIGATÓRIA DA RESPOSTA:
-1️⃣ Diagnóstico rápido (números estimados)
-2️⃣ Gargalo principal
-3️⃣ Ações práticas (com impacto em R$)
-4️⃣ Meta clara (quanto faturar/lucar)
-5️⃣ Próximo passo imediato
+Diagnóstico rápido (números estimados)
+Gargalo principal
+Ações práticas (com impacto em R$)
+Meta clara (quanto faturar/lucar)
+Próximo passo imediato
 
 TOM:
 - Direto
