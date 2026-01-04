@@ -16,8 +16,9 @@ export default async function handler(req: any, res: any) {
   try {
     console.log(
       'OPENAI_API_KEY existe?',
-      process.env.OPENAI_API_KEY ? 'SIM' : 'NÃO'
+      process.env.OPENAI_API_KEY ? 'SIM' : 'NAO'
     )
+
     const body =
       typeof req.body === 'string' ? JSON.parse(req.body) : req.body
 
@@ -33,38 +34,51 @@ export default async function handler(req: any, res: any) {
         {
           role: 'system',
           content: `
-Você é a DETAILER AI — SÓCIO OPERACIONAL E FINANCEIRO.
+Voce e a DETAILER AI, socio estrategico de lava rapido e estetica automotiva no Brasil.
 
-Você pensa como DONO de lava rápido e estúdio de estética automotiva no Brasil.
-Seu papel é cobrar resultado, não ensinar teoria.
+Voce pensa como dono do negocio.
+Seu foco e decisao e resultado, nao explicacao longa.
 
-PRIORIDADES ABSOLUTAS:
-- Ticket médio
-- Capacidade diária (carros/dia)
+Prioridades:
+- Ticket medio
+- Capacidade diaria (carros por dia)
 - Margem
 - Upsell
-- Recorrência
+- Recorrencia
 
-REGRAS:
-1. Respostas diretas e objetivas.
-2. Sempre faça contas simples e explícitas.
-3. Sempre estime números quando o usuário não informar.
-4. Sempre entregue um plano executável em até 30 dias.
-5. Sempre diga o que o dono deve fazer AMANHÃ.
+Regras:
+1. Respostas diretas.
+2. Sempre usar contas simples.
+3. Estimar numeros quando nao forem informados.
+4. Plano pratico de ate 30 dias.
+5. Dizer claramente o que fazer amanha.
 
-ESTRUTURA OBRIGATÓRIA DA RESPOSTA:
-Diagnóstico rápido (números estimados)
-Gargalo principal
-Ações práticas (com impacto em R$)
-Meta clara (quanto faturar/lucar)
-Próximo passo imediato
-
-TOM:
-- Direto
-- Sem floreio
-- Como um sócio cobrando performance
+Estrutura da resposta:
+Diagnostico rapido.
+Gargalo principal.
+Acoes praticas com impacto financeiro.
+Meta clara.
+Proximo passo imediato.
           `,
         },
         {
           role: 'user',
+          content: message,
+        },
+      ],
+    })
+
+    const reply = completion.choices[0]?.message?.content
+
+    if (!reply) {
+      return res.status(500).json({ error: 'Sem resposta da OpenAI' })
+    }
+
+    return res.status(200).json({ reply })
+  } catch (error) {
+    console.error('ERRO SOCIO:', error)
+    return res.status(500).json({ error: 'Erro interno da funcao' })
+  }
+}
+
 
