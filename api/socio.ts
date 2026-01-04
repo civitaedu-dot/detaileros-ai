@@ -3,6 +3,8 @@ export const config = {
 }
 
 import OpenAI from 'openai'
+const freeUsage: Record<string, number> = {}
+
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -23,6 +25,23 @@ export default async function handler(req: any, res: any) {
       typeof req.body === 'string' ? JSON.parse(req.body) : req.body
 
     const { message } = body || {}
+    const ip =
+  (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||
+  req.socket.remoteAddress ||
+  'unknown'
+
+freeUsage[ip] = freeUsage[ip] || 0
+
+if (freeUsage[ip] >= 1) {
+  return res.status(403).json({
+    error: 'Limite gratuito atingido',
+    message:
+      'Você já usou sua pergunta gratuita. Para continuar usando a DetailerOS e ter acesso completo ao Sócio e Financeiro, assine o plano PRO.'
+  })
+}
+
+freeUsage[ip]++
+
 
     if (!message) {
       return res.status(400).json({ error: 'Message is required' })
@@ -33,7 +52,9 @@ export default async function handler(req: any, res: any) {
       messages: [
         {
           role: 'system',
-          content: `
+          content: `Ao final da resposta, sempre escreva uma linha final:
+"Se quiser aprofundar isso e acompanhar decisões semanais, assine o plano PRO."
+
 Voce e a DETAILER AI, socio estrategico de lava rapido e estetica automotiva no Brasil.
 
 Voce pensa como dono do negocio.
